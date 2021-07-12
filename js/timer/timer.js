@@ -28,11 +28,23 @@ function pad(value) {
 const refs = {
     startBtn: document.querySelector('button[data-start]'),
     inputData: document.getElementById("date-selector"),
-    clockFace: document.querySelector(".timer1"),
+    timerDays: document.querySelector('span[data-days]'),
+    timerHours: document.querySelector('span[data-hours]'),
+    timerMinutes: document.querySelector('span[data-minutes]'),
+    timerSeconds: document.querySelector('span[data-seconds]'),
 }
 
 refs.inputData.addEventListener("change", onDataInput);
-refs.startBtn.addEventListener('click', () => { timer.start(); });
+refs.startBtn.addEventListener('click', () => {
+    if (finishTime <= Date.now()) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Please choose a date in the future',
+        })
+        return;
+    }
+    timer.start();
+});
 
 let finishTime = 0;
 function onDataInput() {
@@ -55,22 +67,24 @@ class Timer {
     }
 
     start() {
-        if (this.isActive) {
+        if (this.isActive) { //проверяет если таймер уже активен, то не дает его запустить снова
             return;
         }
 
-        refs.startBtn.disabled = true;
-        this.intervalId = setInterval(() => {
+        refs.startBtn.disabled = true; //если таймер запускается -кнопка запуска становится неактивной
+        this.intervalId = setInterval(() => {  //intervalId необходим чтоб остановить таймер(обратиться к нему)
             const currentTime = Date.now();
             //console.log(currentTime);
-            console.log(finishTime);
-            const deltaTime = finishTime - currentTime;
-            console.log(deltaTime);
+            // console.log(finishTime);
+            const deltaTime = finishTime - currentTime - 10800000;
+            //console.log(deltaTime);
             // const { days, hours, minutes, seconds } = convertMs(deltaTime);
-            const time = convertMs(deltaTime);
-            console.log(time);
-
-            this.onTick(time);
+            const time = convertMs(deltaTime); //конвертирует мс в правильный формат даты
+            //console.log(time);
+            if (deltaTime === null) {
+                stop()
+            };
+            this.onTick(time); //передает структурирован параметры даты 
 
         }, 1000);
     }
@@ -86,8 +100,10 @@ const timer = new Timer({
     onTick: updateClockFace
 });
 
-
-
+//добавляет время таймера в интерфейс (HTML)
 function updateClockFace({ days, hours, minutes, seconds }) {
-    refs.clockFace.textContent = `${days}:${hours}:${minutes}:${seconds}`;
+    refs.timerDays.textContent = `${days}`;
+    refs.timerHours.textContent = `${hours}`;
+    refs.timerMinutes.textContent = `${minutes}`;
+    refs.timerSeconds.textContent = `${seconds}`;
 };
